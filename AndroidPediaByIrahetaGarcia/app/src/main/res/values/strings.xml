@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">AndroidPedia By Iraheta Garcia</string>
+    <string name="AP">AndroidPedia</string>
+    <string name="AndroidP">¿Cuánto sabes de Android?</string>
+    <string name="nombre">Valeria Lourdes Iraheta Garcia</string>
+    <string name="carnet">00002024</string>
+    <string name="ComQuiz">Comenzar Quiz</string>
+    <string name="Reiniciar">Reiniciar Quiz</string>
+    <string name="unaDe3">Estudia mas!</string>
+    <string name="dosDe3">Tu puedes!</string>
+    <string name="tresDe3">Buen trabajo</string>
+</resources>
