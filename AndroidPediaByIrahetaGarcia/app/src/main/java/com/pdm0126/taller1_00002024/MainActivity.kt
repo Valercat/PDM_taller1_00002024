@@ -52,11 +52,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AndroidPediaByIrahetaGarciaTheme {
-                PantallaPreguntas()
+                when (pantallaActual) {
+                    "inicio" -> Inicio()
+                    "quiz" -> PantallaPreguntas()
+                    "final" -> PantallaFinal()
+                    else -> {}
+                }
             }
         }
     }
 }
+
+var pantallaActual by mutableStateOf("inicio")
+var puntajeGlobal by mutableIntStateOf(0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,11 +119,9 @@ fun Inicio() {
 
             Button(
                 onClick = {
-//                    listaUsuario.add(usuario.value)
-//                    usuario.value = ""
+                    pantallaActual = "quiz"
                 },
                 modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
-                //colors = ButtonColors(contentColor = colorResource(R.color.purple_700))
             ) {
                 Text(
                     text = stringResource(R.string.ComQuiz),
@@ -129,7 +135,7 @@ fun Inicio() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaPreguntas(): Int {
+fun PantallaPreguntas(){
     var puntaje by rememberSaveable { mutableIntStateOf(0) }
     var numeroPregunta by rememberSaveable { mutableIntStateOf(0) }
     val preguntaActual = PreguntasQuiz[numeroPregunta]
@@ -164,21 +170,19 @@ fun PantallaPreguntas(): Int {
         ) {
 
             Text(text = "Pregunta ${numeroPregunta + 1} de 3")
-
+            Text(text = "Puntaje $puntaje de 3")
             Text(text = preguntaActual.pregunta)
 
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 preguntaActual.opciones.forEach { opcion ->
-
                     val colorBoton = when {
                         !respondido -> MaterialTheme.colorScheme.primary
                         opcion == preguntaActual.respuestaCorrecta -> Color.Green
-                        opcion != preguntaActual.respuestaCorrecta && opcionSeleccionada == opcion -> Color.Red
+                        opcion == opcionSeleccionada && opcion != preguntaActual.respuestaCorrecta -> Color.Red
                         else -> MaterialTheme.colorScheme.primary
                     }
-
                     Button(
                         onClick = {
                             if (!respondido) {
@@ -191,7 +195,10 @@ fun PantallaPreguntas(): Int {
                             }
                         },
                         enabled = !respondido,
-                        colors = ButtonDefaults.buttonColors(containerColor = colorBoton),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorBoton,
+                            disabledContainerColor = colorBoton
+                        ),
                         modifier = Modifier
                             .padding(10.dp)
                             .fillMaxWidth()
@@ -217,23 +224,37 @@ fun PantallaPreguntas(): Int {
                                 respondido = false
                                 opcionSeleccionada = ""
                             }
+                            else{
+                                puntajeGlobal = puntaje
+                                pantallaActual = "final"
+                            }
                         },
                         modifier = Modifier.padding(top = 10.dp)
                     ) {
-                        Text("Siguiente")
+                        Text(
+                            if (numeroPregunta == 2){
+                                "Ver Resultado"
+                            }
+                            else "Siguiente"
+                        )
                     }
                 }
             }
         }
     }
-
-    return puntaje
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaFinal() {
 
+    val mensaje = when(puntajeGlobal){
+        0 -> stringResource(R.string.cerode3)
+        1 -> stringResource(R.string.unaDe3)
+        2 -> stringResource(R.string.dosDe3)
+        3 -> stringResource(R.string.tresDe3)
+            else ->{}
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -266,25 +287,22 @@ fun PantallaFinal() {
                     modifier = Modifier.padding(10.dp, 20.dp),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    text = "Obtuviste X de 3"
+                    text = "Obtuviste $puntajeGlobal de 3"
                 )
             }
             Box(modifier = Modifier) {
-                //When
-                //Text(
-                //fontSize = 20.sp,
-                //text = stringResource(R.string.RESPUESTA PERSONALIZADA),
-                //)
+                Text(
+                fontSize = 20.sp,
+                text = "$mensaje"
+                )
             }
 
             Button(
                 onClick = {
-//                    reiniciar
-                    //restablece todos los estados al valor inicial y regresa a la primera
-//            pregunta.
+                    pantallaActual = "quiz"
+                    puntajeGlobal = 0
                 },
-                modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
-                //colors = ButtonColors(contentColor = colorResource(R.color.purple_700))
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text(
                     text = stringResource(R.string.Reiniciar),
