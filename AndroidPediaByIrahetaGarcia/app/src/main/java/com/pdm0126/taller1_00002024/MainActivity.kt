@@ -47,51 +47,55 @@ import androidx.compose.ui.unit.sp
 import com.pdm0126.taller1_00002024.ui.theme.AndroidPediaByIrahetaGarciaTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AndroidPediaByIrahetaGarciaTheme {
-                when (pantallaActual) {
-                    "inicio" -> Inicio()
-                    "quiz" -> PantallaPreguntas()
-                    "final" -> PantallaFinal()
-                    else -> {}
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        colors = topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            titleContentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                        modifier = Modifier,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(40.dp, 20.dp)
+                            )
+                        },
+                    )
+                },
+
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        when (pantallaActual) {
+                            1 -> Inicio()
+                            2 -> PantallaPreguntas()
+                            3 -> PantallaFinal()
+                            else -> {}
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-var pantallaActual by mutableStateOf("inicio")
+
+var pantallaActual by mutableIntStateOf(1)
 var puntajeGlobal by mutableIntStateOf(0)
+//var opcionSeleccionada by mutableStateOf("")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Inicio() {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                modifier = Modifier,
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp, 20.dp)
-                    )
-                },
-            )
-        },
-
-        ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(16.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -119,7 +123,7 @@ fun Inicio() {
 
             Button(
                 onClick = {
-                    pantallaActual = "quiz"
+                    pantallaActual = 2
                 },
                 modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
             ) {
@@ -129,72 +133,46 @@ fun Inicio() {
                 )
             }
         }
-    }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaPreguntas(){
-    var puntaje by rememberSaveable { mutableIntStateOf(0) }
     var numeroPregunta by rememberSaveable { mutableIntStateOf(0) }
     val preguntaActual = PreguntasQuiz[numeroPregunta]
-    var respondido by rememberSaveable { mutableStateOf(false) }
+    var isRespondido by rememberSaveable { mutableStateOf(false) }
     var opcionSeleccionada by rememberSaveable { mutableStateOf("") }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp, 20.dp)
-                    )
-                },
-            )
-        }
-    ) { innerPadding ->
 
         Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text(text = "Pregunta ${numeroPregunta + 1} de 3")
-            Text(text = "Puntaje $puntaje de 3")
-            Text(text = preguntaActual.pregunta)
+            Text(text = "Pregunta ${numeroPregunta + 1} de 3", fontSize = 20.sp)
+            Text(text = "Puntaje $puntajeGlobal de 3", fontSize = 20.sp)
+            Text(text = preguntaActual.pregunta, fontSize = 17.sp)
 
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 preguntaActual.opciones.forEach { opcion ->
                     val colorBoton = when {
-                        !respondido -> MaterialTheme.colorScheme.primary
+                        !isRespondido -> MaterialTheme.colorScheme.primary
                         opcion == preguntaActual.respuestaCorrecta -> Color.Green
                         opcion == opcionSeleccionada && opcion != preguntaActual.respuestaCorrecta -> Color.Red
                         else -> MaterialTheme.colorScheme.primary
                     }
                     Button(
                         onClick = {
-                            if (!respondido) {
-                                respondido = true
+                                isRespondido = true
                                 opcionSeleccionada = opcion
-
-                                if (opcion == preguntaActual.respuestaCorrecta) {
-                                    puntaje += 1
-                                }
-                            }
+                                BotonOpcionesPregunta(opcion, numeroPregunta)
                         },
-                        enabled = !respondido,
+                        enabled = !isRespondido,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorBoton,
                             disabledContainerColor = colorBoton
@@ -210,38 +188,45 @@ fun PantallaPreguntas(){
                     }
                 }
 
-                if (respondido) {
+                if (isRespondido) {
                     Text(
                         text = preguntaActual.funFact,
                         fontSize = 22.sp,
                         modifier = Modifier.padding(top = 16.dp)
                     )
-
+                    if(numeroPregunta < PreguntasQuiz.size -1) {
                     Button(
                         onClick = {
-                            if (numeroPregunta < PreguntasQuiz.size - 1) {
-                                numeroPregunta += 1
-                                respondido = false
-                                opcionSeleccionada = ""
-                            }
-                            else{
-                                puntajeGlobal = puntaje
-                                pantallaActual = "final"
-                            }
-                        },
-                        modifier = Modifier.padding(top = 10.dp)
-                    ) {
-                        Text(
-                            if (numeroPregunta == 2){
-                                "Ver Resultado"
-                            }
-                            else "Siguiente"
-                        )
+                            numeroPregunta += 1
+                            isRespondido = false
+                            opcionSeleccionada = ""
+                        }, modifier = Modifier.padding(top = 10.dp)
+                    ) {Text(
+                        "Siguiente"
+                    )}
+                    }
+                    else{
+                        Button(
+                            onClick = {
+                                pantallaActual = 3
+                            }, modifier = Modifier.padding(top = 10.dp)
+                        ) {Text(
+                            "Ver Resultado"
+                        )}
+                    }
                     }
                 }
             }
         }
-    }
+
+
+
+fun BotonOpcionesPregunta(opcion: String, numeroPregunta: Int){
+    val preguntaActual = PreguntasQuiz[numeroPregunta]
+      if (opcion == preguntaActual.respuestaCorrecta) {
+           puntajeGlobal += 1
+      }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,29 +240,10 @@ fun PantallaFinal() {
         3 -> stringResource(R.string.tresDe3)
             else ->{}
     }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                modifier = Modifier,
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp, 20.dp)
-                    )
-                },
-            )
-        },
 
-        ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(16.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -299,7 +265,7 @@ fun PantallaFinal() {
 
             Button(
                 onClick = {
-                    pantallaActual = "quiz"
+                    pantallaActual = 2
                     puntajeGlobal = 0
                 },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -311,7 +277,7 @@ fun PantallaFinal() {
             }
         }
     }
-}
+
 
 data class Pregunta(
     val id: Int,
