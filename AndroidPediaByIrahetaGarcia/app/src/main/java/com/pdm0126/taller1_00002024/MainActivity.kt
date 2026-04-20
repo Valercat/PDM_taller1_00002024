@@ -226,7 +226,6 @@ fun BotonOpcionesPregunta(opcion: String, numeroPregunta: Int){
       if (opcion == preguntaActual.respuestaCorrecta) {
            puntajeGlobal += 1
       }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
